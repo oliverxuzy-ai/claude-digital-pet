@@ -19,7 +19,6 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "chokidar": "^4.0.0",
     "ink": "^5.1.0",
     "ink-select-input": "^6.0.0",
     "ink-text-input": "^6.0.0",

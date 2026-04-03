@@ -3,4 +3,4 @@ import React from 'react';
 import { render } from 'ink';
 import { App } from './App.js';
 
-render(React.createElement(App));
+render(React.createElement(App), { fullScreen: true });
