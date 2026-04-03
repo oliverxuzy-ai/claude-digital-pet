@@ -40,12 +40,14 @@ export function parseTokenUsage(line: string): TokenUsage | null {
   }
 }
 
+// Weight tokens by approximate API cost ratio:
+// input: 1x, output: 1x, cache_creation: 1.25x, cache_read: 0.1x
 export function totalTokens(usage: TokenUsage): number {
-  return (
+  return Math.round(
     usage.inputTokens +
     usage.outputTokens +
-    usage.cacheCreationTokens +
-    usage.cacheReadTokens
+    usage.cacheCreationTokens * 1.25 +
+    usage.cacheReadTokens * 0.1
   );
 }
 
@@ -156,42 +158,19 @@ export function createTokenMonitor(options: TokenMonitorOptions) {
     }
   }
 
-  async function start() {
+  function start() {
     scanForFiles();
 
-    // Try chokidar first, fall back to polling
-    try {
-      const chokidar = await import('chokidar');
-      watcher = chokidar.watch(CLAUDE_PROJECTS_DIR + '/**/*.jsonl', {
-        persistent: true,
-        ignoreInitial: true,
-        depth: 2,
-        awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 50 },
-      });
-
-      watcher.on('change', (filePath: string) => {
+    // Poll every 2 seconds — simple and reliable across all platforms.
+    // chokidar v4+ has glob/event issues on macOS; polling at this
+    // interval is negligible CPU for watching a few small files.
+    scanInterval = setInterval(() => {
+      scanForFiles();
+      for (const [filePath] of watchedFiles) {
         processFile(filePath);
-      });
-
-      watcher.on('add', (filePath: string) => {
-        if (filePath.endsWith('.jsonl')) {
-          try {
-            const stat = fs.statSync(filePath);
-            watchedFiles.set(filePath, { path: filePath, offset: stat.size });
-          } catch {
-            // Skip
-          }
-        }
-      });
-    } catch {
-      // Fallback: poll every 2 seconds
-      scanInterval = setInterval(() => {
-        scanForFiles();
-        for (const [filePath] of watchedFiles) {
-          processFile(filePath);
-        }
-      }, 2000);
-    }
+      }
+      checkSleep();
+    }, 2000);
   }
 
   function stop() {

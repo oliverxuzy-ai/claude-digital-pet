@@ -69,14 +69,16 @@ describe('parseTokenUsage', () => {
 });
 
 describe('totalTokens', () => {
-  it('sums all token types', () => {
+  it('sums all token types with cost weighting', () => {
+    // input: 1000*1 + output: 500*1 + cache_create: 200*1.25 + cache_read: 300*0.1
+    // = 1000 + 500 + 250 + 30 = 1780
     const total = totalTokens({
       inputTokens: 1000,
       outputTokens: 500,
       cacheCreationTokens: 200,
       cacheReadTokens: 300,
     });
-    expect(total).toBe(2000);
+    expect(total).toBe(1780);
   });
 
   it('handles zero tokens', () => {

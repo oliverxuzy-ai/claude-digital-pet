@@ -100,17 +100,18 @@ describe('gameLoop', () => {
     const state = makeState({ coins: 0, tokenRemainder: 0 });
     const loop = createGameLoop(state, { onStateChange, onPurchaseFailed });
 
+    // Weighted: 8000*1 + 4000*1 + 0*1.25 + 0*0.1 = 12000
     loop.enqueueTokens({
-      inputTokens: 5000,
-      outputTokens: 3000,
-      cacheCreationTokens: 1000,
-      cacheReadTokens: 1000,
+      inputTokens: 8000,
+      outputTokens: 4000,
+      cacheCreationTokens: 0,
+      cacheReadTokens: 0,
     });
     loop.tick();
 
     const updatedState = onStateChange.mock.calls[0][0] as PetState;
     expect(updatedState.coins).toBe(1);
-    expect(updatedState.totalTokensEarned).toBe(10000);
+    expect(updatedState.totalTokensEarned).toBe(12000);
   });
 
   it('applies stat decay when online', () => {
